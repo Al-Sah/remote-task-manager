@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option csharp_namespace = "TaskManager";
+package connection;
+
+
+service ConnectionManager {
+  rpc Run (stream RequestMgs) returns (stream ReplyMsg);
+}
+
+message RequestMgs {
+  string message = 1;
+}
+
+message ReplyMsg {
+  string message = 1;
+}
