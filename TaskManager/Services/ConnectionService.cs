@@ -1,7 +1,10 @@
-using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using TaskManager.Core;
 
 namespace TaskManager.Services
 {
@@ -14,26 +17,34 @@ namespace TaskManager.Services
             _logger = logger;
         }
 
-        public List<string> Connections { get; }
-
         public override async Task Run(
             IAsyncStreamReader<RequestMgs> requestStream,
             IServerStreamWriter<ReplyMsg> responseStream,
             ServerCallContext context)
         {
             var httpContext = context.GetHttpContext();
-            Connections.Add(httpContext.Connection.Id);
-
             _logger.LogInformation($"Connection id: {httpContext.Connection.Id}");
 
-            var prevNotes = new List<RequestMgs>();
             while (await requestStream.MoveNext())
             {
-                var note = requestStream.Current;
-                prevNotes.Add(note);
-                foreach (var prevNote in prevNotes)
+                switch (requestStream.Current.Action)
                 {
-                    await responseStream.WriteAsync(new ReplyMsg {Message = prevNote.Message});
+                    case Action.Get:
+                    {
+                        await responseStream.WriteAsync(new ReplyMsg
+                        {
+                            Message = JsonConvert.SerializeObject(Process.GetProcesses()
+                                .Select(process => (ProcessInfoBase) new ProcessInfo(process)).ToList()),
+                            ReplayType = ReplayType.Data
+                        });
+                        break;
+                    }
+                    case Action.Kill:
+                        break;
+                    case Action.Modify:
+                        break;
+                    case Action.Start:
+                        break;
                 }
             }
         }

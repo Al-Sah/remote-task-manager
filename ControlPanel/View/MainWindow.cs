@@ -8,15 +8,19 @@ using ControlPanel.Core;
 using Grpc.Core;
 using Grpc.Net.Client;
 using TaskManager;
+using Action = TaskManager.Action;
 
 namespace ControlPanel.View
 {
     public partial class MainWindow : Form
     {
-        private readonly Thread _grpcRunner;
+        private Thread _grpcRunner;
         private readonly TaskManagersSearcher _searcher;
 
         private readonly ShowServerInfoDialog _serverInfoDialog;
+
+        private GrpcChannel? _currentConnection;
+        private ServerInfo? _serverInfo;
 
         public MainWindow()
         {
@@ -24,27 +28,14 @@ namespace ControlPanel.View
             _searcher = new TaskManagersSearcher();
             _searcher.NewTaskManagerFound += OnNewTaskManagerFound;
             _serverInfoDialog = new ShowServerInfoDialog();
-
-            _grpcRunner = new Thread(() =>
-            {
-                try
-                {
-                    var task = Task.Run(async () => await Run());
-                    task.Wait();
-                }
-                catch (Exception e)
-                {
-                    Debug.WriteLine($"Exception caught: {e}");
-                }
-            });
+            _serverInfo = null;
             _searcher.Start();
         }
 
 
-        async Task Run()
+        private async Task HandleConnection()
         {
-            using var channel = GrpcChannel.ForAddress("https://localhost:5001");
-            var client = new ConnectionManager.ConnectionManagerClient(channel);
+            var client = new ConnectionManager.ConnectionManagerClient(_currentConnection);
             using (var call = client.Run())
             {
                 var responseReaderTask = Task.Run(async () =>
@@ -62,7 +53,7 @@ namespace ControlPanel.View
                 {
                     Thread.Sleep(2000);
                     var data = "Rand: " + random.NextDouble();
-                    await call.RequestStream.WriteAsync(new RequestMgs {Message = data});
+                    await call.RequestStream.WriteAsync(new RequestMgs {Message = data, Action = Action.Get});
                     i++;
                 }
 
@@ -92,24 +83,42 @@ namespace ControlPanel.View
 
         private void ShowInfoComputerBtn_Click(object sender, EventArgs e)
         {
-            var serverInfo = _searcher.TaskManagers.Find(
-                tm => tm.ServiceInstanceName == ComputersList.SelectedItem.ToString());
-            if (serverInfo == null)
+            if (_serverInfo == null)
             {
                 // TODO notify
                 return;
             }
 
-            _serverInfoDialog.ServerInfo = serverInfo;
+            _serverInfoDialog.ServerInfo = _serverInfo;
             _serverInfoDialog.ShowDialog();
         }
 
         private void ConnectBtn_Click(object sender, EventArgs e)
         {
+            if (_serverInfo == null)
+            {
+                // TODO notify
+                return;
+            }
+
+            _currentConnection = GrpcChannel.ForAddress($"https://localhost:{_serverInfo.Port}");
+            _grpcRunner = new Thread(() =>
+            {
+                try
+                {
+                    var task = Task.Run(async () => await HandleConnection());
+                    task.Wait();
+                }
+                catch (Exception exception)
+                {
+                    Debug.WriteLine($"Exception caught: {exception}");
+                }
+            });
+            _grpcRunner.Start();
         }
 
-        private void ComputersList_SelectedIndexChanged(object sender, EventArgs e)
-        {
-        }
+        private void ComputersList_SelectedIndexChanged(object sender, EventArgs e) =>
+            _serverInfo = _searcher.TaskManagers.Find(
+                tm => tm.ServiceInstanceName == ComputersList.SelectedItem.ToString());
     }
 }
