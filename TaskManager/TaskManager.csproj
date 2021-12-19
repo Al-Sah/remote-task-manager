@@ -8,8 +8,9 @@
     <Protobuf Include="..\Protos\ConnectionManager.proto" GrpcServices="Server"/>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Grpc.AspNetCore" Version="2.27.0"/>
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.27.0"/>
+        <PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0"/>
+    </ItemGroup>
 
 </Project>
