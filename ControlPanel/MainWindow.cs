@@ -71,5 +71,17 @@ namespace ControlPanel
             _grpcRunner.Join();
             _searcher.Stop();
         }
+
+        private void ShowInfoComputerBtn_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void ConnectBtn_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void ComputersList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+        }
     }
 }
