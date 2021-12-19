@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,17 +9,22 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using TaskManager;
 
-namespace ControlPanel
+namespace ControlPanel.View
 {
     public partial class MainWindow : Form
     {
         private readonly Thread _grpcRunner;
         private readonly TaskManagersSearcher _searcher;
 
+        private readonly ShowServerInfoDialog _serverInfoDialog;
+
         public MainWindow()
         {
             InitializeComponent();
             _searcher = new TaskManagersSearcher();
+            _searcher.NewTaskManagerFound += OnNewTaskManagerFound;
+            _serverInfoDialog = new ShowServerInfoDialog();
+
             _grpcRunner = new Thread(() =>
             {
                 try
@@ -65,15 +71,37 @@ namespace ControlPanel
             }
         }
 
+        private void OnNewTaskManagerFound(string taskManagerName)
+        {
+            try
+            {
+                ComputersList.Invoke((MethodInvoker) delegate { ComputersList.Items.Add(taskManagerName); });
+            }
+            catch (InvalidAsynchronousStateException e)
+            {
+                Debug.WriteLine(e);
+            }
+        }
+
 
         private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
         {
-            _grpcRunner.Join();
+            //_grpcRunner.Join();
             _searcher.Stop();
         }
 
         private void ShowInfoComputerBtn_Click(object sender, EventArgs e)
         {
+            var serverInfo = _searcher.TaskManagers.Find(
+                tm => tm.ServiceInstanceName == ComputersList.SelectedItem.ToString());
+            if (serverInfo == null)
+            {
+                // TODO notify
+                return;
+            }
+
+            _serverInfoDialog.ServerInfo = serverInfo;
+            _serverInfoDialog.ShowDialog();
         }
 
         private void ConnectBtn_Click(object sender, EventArgs e)

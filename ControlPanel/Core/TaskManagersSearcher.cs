@@ -22,6 +22,10 @@ namespace ControlPanel.Core
 
         public List<ServerInfo> TaskManagers { get; }
 
+        public delegate void NewItem(string message);
+
+        public event NewItem? NewTaskManagerFound;
+
         public TaskManagersSearcher()
         {
             _event = new ManualResetEvent(true);
@@ -79,12 +83,11 @@ namespace ControlPanel.Core
                 {
                     var newTaskManager = new ServerInfo
                     {
-                        CurrentState = ServerInfo.DataState.Collecting,
-                        LastUpdate = DateTime.Now,
                         ServiceInstanceName = e.ServiceInstanceName.ToString()
                     };
                     newTaskManager.ServiceLabels.AddRange(e.ServiceInstanceName.Labels);
                     TaskManagers.Add(newTaskManager);
+                    NewTaskManagerFound?.Invoke(e.ServiceInstanceName.ToString());
 
                     _mdns.SendQuery(e.ServiceInstanceName, type: DnsType.SRV);
                     _mdns.SendQuery(e.ServiceInstanceName, type: DnsType.A);

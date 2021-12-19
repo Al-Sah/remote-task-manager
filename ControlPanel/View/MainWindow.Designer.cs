@@ -1,4 +1,4 @@
-﻿namespace ControlPanel
+﻿namespace ControlPanel.View
 {
     partial class MainWindow
     {
