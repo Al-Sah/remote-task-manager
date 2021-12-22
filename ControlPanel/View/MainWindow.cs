@@ -27,6 +27,7 @@ namespace ControlPanel.View
             InitializeComponent();
             _connectionManager = new ConnectionManager();
             _connectionManager.NewDataReceived += ProcessesGridViewSafeUpdate;
+            _connectionManager.ExceptionCaught += Notifier.ErrorMessageBox;
 
             _searcher = new TaskManagersSearcher();
             _searcher.NewTaskManagerFound += OnNewTaskManagerFound;
@@ -58,7 +59,7 @@ namespace ControlPanel.View
         {
             if (_serverInfo == null)
             {
-                // TODO notify
+                Notifier.ErrorMessageBox("Server information was not set");
                 return;
             }
 
@@ -66,22 +67,44 @@ namespace ControlPanel.View
             _serverInfoDialog.ShowDialog();
         }
 
-        private void ConnectBtn_Click(object sender, EventArgs e)
+        private bool ValidateServerInformation()
         {
             if (_serverInfo == null)
             {
-                // TODO notify
+                Notifier.ErrorMessageBox("Server information was not set");
+                return false;
+            }
+
+            if (_serverInfo.CurrentState is ServerInfo.DataState.Failed or ServerInfo.DataState.Deprecated)
+            {
+                Notifier.ErrorMessageBox("Incorrect Server information");
+                return false;
+            }
+
+            return true;
+        }
+
+        private void ConnectBtn_Click(object sender, EventArgs e)
+        {
+            if (!ValidateServerInformation())
+            {
                 return;
             }
 
             if (_connectionManager.IsRunning())
             {
-                // TODO notify
+                Notifier.ErrorMessageBox("Connection has been already established");
                 return;
             }
 
-            _connectionManager.SetupConnection(GrpcChannel.ForAddress($"https://localhost:{_serverInfo.Port}"));
+            if (!_connectionManager.SetupConnection(GrpcChannel.ForAddress($"https://localhost:{_serverInfo!.Port}")))
+            {
+                Notifier.ErrorMessageBox("Connection setup fail");
+                return;
+            }
+
             _connectionManager.RunClient();
+            Notifier.InformationMessageBox("Connected !!!");
         }
 
         private void ComputersList_SelectedIndexChanged(object sender, EventArgs e) =>

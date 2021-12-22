@@ -25,8 +25,11 @@ namespace ControlPanel.Core
 
         private bool _run;
 
-        public void SetupConnection(GrpcChannel grpcChannel) =>
+        public bool SetupConnection(GrpcChannel grpcChannel)
+        {
             _client = new GrpcConnectionManager.GrpcConnectionManagerClient(grpcChannel);
+            return _client != null;
+        }
 
         public void ShutDownConnection() => _run = false;
 
@@ -54,9 +57,10 @@ namespace ControlPanel.Core
                 catch (Exception exception)
                 {
                     _run = false;
+                    ExceptionCaught?.Invoke(exception.Message);
                     Debug.WriteLine($"Exception caught: {exception}");
                 }
-            });
+            }) {IsBackground = true};
             _grpcRunner.Start();
         }
 
