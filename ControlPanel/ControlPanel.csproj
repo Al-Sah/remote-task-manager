@@ -10,7 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0"/>
-        <Protobuf Include="..\Protos\ConnectionManager.proto" GrpcServices="Client"/>
+        <Protobuf Include="..\Protos\GrpcConnectionManager.proto" GrpcServices="Client"/>
         <PackageReference Include="Google.Protobuf" Version="3.19.1"/>
         <PackageReference Include="Grpc.AspNetCore" Version="2.41.0-pre1"/>
         <PackageReference Include="Grpc.Net.Client" Version="2.41.0-pre1"/>
@@ -26,6 +26,9 @@
         </Compile>
         <Compile Update="View\ShowServerInfoDialog.cs">
             <SubType>Form</SubType>
+        </Compile>
+        <Compile Include="..\ProcessInfoBase.cs">
+            <Link>Core\ProcessInfoBase.cs</Link>
         </Compile>
     </ItemGroup>
 

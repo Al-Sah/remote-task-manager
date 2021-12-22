@@ -10,6 +10,8 @@ using Grpc.Net.Client;
 using TaskManager;
 using Action = TaskManager.Action;
 
+// grpc enum
+
 namespace ControlPanel.View
 {
     public partial class MainWindow : Form
@@ -35,7 +37,7 @@ namespace ControlPanel.View
 
         private async Task HandleConnection()
         {
-            var client = new ConnectionManager.ConnectionManagerClient(_currentConnection);
+            var client = new GrpcConnectionManager.GrpcConnectionManagerClient(_currentConnection);
             using (var call = client.Run())
             {
                 var responseReaderTask = Task.Run(async () =>

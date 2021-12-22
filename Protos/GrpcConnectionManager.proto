@@ -4,7 +4,7 @@ option csharp_namespace = "TaskManager";
 package connection;
 
 
-service ConnectionManager {
+service GrpcConnectionManager {
   rpc Run (stream RequestMgs) returns (stream ReplyMsg);
 }
 

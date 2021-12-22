@@ -8,7 +8,7 @@ using TaskManager.Core;
 
 namespace TaskManager.Services
 {
-    public class ConnectionService : ConnectionManager.ConnectionManagerBase
+    public class ConnectionService : GrpcConnectionManager.GrpcConnectionManagerBase
     {
         private readonly ILogger<ConnectionService> _logger;
 
