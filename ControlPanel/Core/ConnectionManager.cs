@@ -1,41 +1,47 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
 using TaskManager;
-using Action = TaskManager.Action;
-
-// grpc enum
 
 namespace ControlPanel.Core
 {
     public class ConnectionManager : IDisposable
     {
         private GrpcConnectionManager.GrpcConnectionManagerClient? _client;
-        private Thread? _grpcRunner;
+        private Thread? _mainCallHandler;
+        private GrpcChannel? _grpcChannel;
+        private AsyncDuplexStreamingCall<RequestMgs, ReplyMsg>? _mainCall;
 
 
-        public delegate void NewItem(string message);
+        public delegate void NewData(List<ProcessInformation> processes);
 
-        public event NewItem? NewDataReceived;
-        public event NewItem? NewNotificationRecived;
-        public event NewItem? ExceptionCaught;
+        public delegate void NewException(string message);
 
-        private bool _run;
+        public event NewData? NewDataReceived;
+        public event NewException? ExceptionCaught;
 
-        public bool SetupConnection(GrpcChannel grpcChannel)
+
+        public bool SetupNewConnection(ServerInfo serverInfo)
         {
-            _client = new GrpcConnectionManager.GrpcConnectionManagerClient(grpcChannel);
+            EndMainCall();
+            _grpcChannel = GrpcChannel.ForAddress($"https://localhost:{serverInfo.Port}");
+            _client = new GrpcConnectionManager.GrpcConnectionManagerClient(_grpcChannel);
             return _client != null;
         }
 
-        public void ShutDownConnection() => _run = false;
-
-        public void RunClient()
+        public void StartMainCall()
         {
-            _grpcRunner = new Thread(() =>
+            if (_client == null)
+            {
+                return;
+            }
+
+            _mainCallHandler = new Thread(() =>
             {
                 try
                 {
@@ -44,62 +50,61 @@ namespace ControlPanel.Core
                         throw new NullReferenceException();
                     }
 
-                    if (_run)
-                    {
-                        return;
-                    }
-
-                    _run = true;
-
-                    var task = Task.Run(async () => await _runClient());
+                    var task = Task.Run(async () => await MainCallHandler());
                     task.Wait();
                 }
                 catch (Exception exception)
                 {
-                    _run = false;
                     ExceptionCaught?.Invoke(exception.Message);
                     Debug.WriteLine($"Exception caught: {exception}");
                 }
-            }) {IsBackground = true};
-            _grpcRunner.Start();
+            });
+            _mainCallHandler.Start();
         }
 
-        public bool IsRunning() => _run;
 
-
-        private async Task _runClient()
+        private async void EndMainCall()
         {
-            using var call = _client!.Run();
+            if (_mainCall != null)
+            {
+                await _mainCall.RequestStream.WriteAsync(new RequestMgs {Message = "End"});
+                await _mainCall.RequestStream.CompleteAsync();
+            }
+        }
+
+        // handler for the bidirectional grpc call
+        private async Task MainCallHandler()
+        {
+            _mainCall = _client!.Get();
 
             var responseReaderTask = Task.Run(async () =>
             {
-                await foreach (var message in call.ResponseStream.ReadAllAsync())
+                await foreach (var message in _mainCall.ResponseStream.ReadAllAsync())
                 {
                     if (message != null)
                     {
-                        NewDataReceived?.Invoke(message.Message);
+                        NewDataReceived?.Invoke(message.ProcessesList.ToList());
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"{DateTime.Now} Income message is null");
                     }
                 }
             });
 
-            while (_run)
-            {
-                Thread.Sleep(1500);
-                await call.RequestStream.WriteAsync(new RequestMgs {Message = string.Empty, Action = Action.Get});
-            }
-
-            await call.RequestStream.CompleteAsync();
+            await _mainCall.RequestStream.WriteAsync(new RequestMgs {Message = "Start"});
+            // wait until calling EndMainCall
             await responseReaderTask;
         }
 
         public void Dispose()
         {
-            if (_grpcRunner is {IsAlive: true})
+            EndMainCall();
+            if (_mainCallHandler is {IsAlive: true})
             {
-                _run = false;
                 try
                 {
-                    _grpcRunner.Join();
+                    _mainCallHandler.Join();
                 }
                 catch
                 {
@@ -107,5 +112,7 @@ namespace ControlPanel.Core
                 }
             }
         }
+
+        public void ShutDownConnection() => EndMainCall();
     }
 }

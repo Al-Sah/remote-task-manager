@@ -5,27 +5,77 @@ package connection;
 
 
 service GrpcConnectionManager {
-  rpc Run (stream RequestMgs) returns (stream ReplyMsg);
+  rpc Get (stream RequestMgs) returns (stream ReplyMsg);
+  rpc Kill (KillRequest) returns (KillResponse);
+  rpc Modify (ModifyRequest) returns (ModifyResponse);
+  rpc Start (StartRequest) returns (StartResponse);
 }
 
+
+// Get processes
 message RequestMgs {
-  string message = 1;
-  Action action = 2;
+  string message = 1; // start, change frequency, end 
+}
+
+message ProcessInformation{
+  int64 id = 1;
+  string name = 2;
+  int32 affinity = 3;
+  string priority = 4;
+  int64 memory = 5;
+  string path = 6;
 }
 
 message ReplyMsg {
-  string message = 1;
-  ReplayType replayType = 2;
+  repeated ProcessInformation ProcessesList = 1;
 }
 
-enum Action{
-  GET = 0;
-  START = 1;
-  KILL = 2;
-  MODIFY = 3;
+
+
+
+
+message ProcessStatus {
+  int64 id = 1;
+  string status = 2; // "Ok" or error
 }
 
-enum ReplayType{
-  Notification = 0;
-  Data = 1;
+
+// send array of PIDs to delete
+message KillRequest {
+  repeated int64 processId = 1;
+}
+message KillResponse {
+  repeated ProcessStatus results = 1;
+}
+
+
+
+message Modification{
+  int64 id = 1;
+  string name = 2;
+  int32 affinity = 3;
+  string priority = 4;
+}
+message ModifyRequest {
+  repeated Modification modifications = 1;
+}
+message ModifyResponse {
+  repeated ProcessStatus results = 1;
+}
+
+
+message StartupInformation{
+  int32 RequestId = 1;
+  string name = 2;
+  string arguments = 3;
+  int32 affinity = 4;
+  string priority = 5;
+}
+
+message StartRequest {
+  repeated StartupInformation StartupRequests = 1;
+}
+message StartResponse {
+  // 'id' here is a RequestId
+  repeated ProcessStatus results = 1;
 }

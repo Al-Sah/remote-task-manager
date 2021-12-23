@@ -5,8 +5,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
 using ControlPanel.Core;
-using Grpc.Net.Client;
-using Newtonsoft.Json;
 using TaskManager;
 using static System.String;
 
@@ -91,19 +89,13 @@ namespace ControlPanel.View
                 return;
             }
 
-            if (_connectionManager.IsRunning())
-            {
-                Notifier.ErrorMessageBox("Connection has been already established");
-                return;
-            }
-
-            if (!_connectionManager.SetupConnection(GrpcChannel.ForAddress($"https://localhost:{_serverInfo!.Port}")))
+            if (!_connectionManager.SetupNewConnection(_serverInfo!))
             {
                 Notifier.ErrorMessageBox("Connection setup fail");
                 return;
             }
 
-            _connectionManager.RunClient();
+            _connectionManager.StartMainCall();
             Notifier.InformationMessageBox("Connected !!!");
         }
 
@@ -112,17 +104,13 @@ namespace ControlPanel.View
                 tm => tm.ServiceInstanceName == ComputersList.SelectedItem.ToString());
 
 
-        private void ProcessesGridViewSafeUpdate(string processes)
+        private void ProcessesGridViewSafeUpdate(List<ProcessInformation> processes)
         {
             try
             {
                 ProcessesGridView.Invoke((MethodInvoker) delegate
                 {
-                    var processesList = JsonConvert.DeserializeObject<List<ProcessInfoBase>>(processes);
-                    if (processesList != null)
-                    {
-                        GridViewManager.Update(processesList, ProcessesGridView);
-                    }
+                    GridViewManager.Update(processes, ProcessesGridView);
                 });
             }
             catch (InvalidAsynchronousStateException e)
@@ -134,7 +122,7 @@ namespace ControlPanel.View
 
         private static class GridViewManager
         {
-            private static void ResetDataGrid(List<ProcessInfoBase> processes, DataGridView gridView)
+            private static void ResetDataGrid(List<ProcessInformation> processes, DataGridView gridView)
             {
                 gridView.Rows.Clear();
                 SortProcesses(processes, gridView);
@@ -143,16 +131,16 @@ namespace ControlPanel.View
                     Cells =
                     {
                         new DataGridViewTextBoxCell {Value = process.Name},
-                        new DataGridViewTextBoxCell {Value = process.Pid},
+                        new DataGridViewTextBoxCell {Value = process.Id},
                         new DataGridViewTextBoxCell {Value = process.Priority},
-                        new DataGridViewTextBoxCell {Value = process.ProcessorAffinity},
+                        new DataGridViewTextBoxCell {Value = process.Affinity},
                         new DataGridViewTextBoxCell {Value = process.Memory},
                         new DataGridViewTextBoxCell {Value = process.Path}
                     }
                 }).ToArray());
             }
 
-            public static void Update(List<ProcessInfoBase> processes, DataGridView gridView)
+            public static void Update(List<ProcessInformation> processes, DataGridView gridView)
             {
                 if (processes.Count != gridView.Rows.Count)
                 {
@@ -172,15 +160,15 @@ namespace ControlPanel.View
                     var process = processes[index];
                     var row = gridView.Rows[index];
                     UpdateUnit(row.Cells[0], process.Name);
-                    UpdateUnit(row.Cells[1], process.Pid);
+                    UpdateUnit(row.Cells[1], process.Id);
                     UpdateUnit(row.Cells[2], process.Priority);
-                    UpdateUnit(row.Cells[3], process.ProcessorAffinity);
+                    UpdateUnit(row.Cells[3], process.Affinity);
                     UpdateUnit(row.Cells[4], process.Memory);
                     UpdateUnit(row.Cells[5], process.Path);
                 }
             }
 
-            private static void SortProcesses(List<ProcessInfoBase> processes, DataGridView gridView)
+            private static void SortProcesses(List<ProcessInformation> processes, DataGridView gridView)
             {
                 switch (gridView.Columns.IndexOf(gridView.SortedColumn))
                 {
@@ -188,13 +176,13 @@ namespace ControlPanel.View
                         processes.Sort((x, y) => CompareOrdinal(x.Name, y.Name));
                         break;
                     case 1:
-                        processes.Sort((x, y) => x.Pid.CompareTo(y.Pid));
+                        processes.Sort((x, y) => x.Id.CompareTo(y.Id));
                         break;
                     case 2:
                         processes.Sort((x, y) => CompareOrdinal(x.Priority, y.Priority));
                         break;
                     case 3:
-                        processes.Sort((x, y) => x.ProcessorAffinity.CompareTo(y.ProcessorAffinity));
+                        processes.Sort((x, y) => x.Affinity.CompareTo(y.Affinity));
                         break;
                     case 4:
                         processes.Sort((x, y) => x.Memory.CompareTo(y.Memory));

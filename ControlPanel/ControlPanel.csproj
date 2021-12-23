@@ -28,9 +28,6 @@
         <Compile Update="View\ShowServerInfoDialog.cs">
             <SubType>Form</SubType>
         </Compile>
-        <Compile Include="..\ProcessInfoBase.cs">
-            <Link>Core\ProcessInfoBase.cs</Link>
-        </Compile>
     </ItemGroup>
 
 </Project>
