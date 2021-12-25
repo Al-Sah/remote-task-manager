@@ -17,6 +17,8 @@ namespace ControlPanel.View
         private readonly ConnectionManager _connectionManager;
         private readonly ShowServerInfoDialog _serverInfoDialog;
 
+        private readonly ProcessManipulationResult _processManipulationResult;
+        private readonly StartNewProcessDialog _startNewProcessDialog;
 
         private ServerInfo? _serverInfo;
 
@@ -26,6 +28,9 @@ namespace ControlPanel.View
             _connectionManager = new ConnectionManager();
             _connectionManager.NewDataReceived += ProcessesGridViewSafeUpdate;
             _connectionManager.ExceptionCaught += Notifier.ErrorMessageBox;
+
+            _processManipulationResult = new ProcessManipulationResult();
+            _startNewProcessDialog = new StartNewProcessDialog {Owner = this};
 
             _searcher = new TaskManagersSearcher();
             _searcher.NewTaskManagerFound += OnNewTaskManagerFound;
@@ -47,8 +52,11 @@ namespace ControlPanel.View
         }
 
 
-        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        private void MainWindow_FormClosing(object sender, FormClosingEventArgs e)
         {
+            _connectionManager.NewDataReceived -= ProcessesGridViewSafeUpdate;
+            _connectionManager.ExceptionCaught -= Notifier.ErrorMessageBox;
+            _searcher.NewTaskManagerFound -= OnNewTaskManagerFound;
             _connectionManager.ShutDownConnection();
             _searcher.Stop();
         }
@@ -119,6 +127,59 @@ namespace ControlPanel.View
             }
         }
 
+
+        private void ShowRemoteCallResult(List<ProcessStatus> result, string action)
+        {
+            if (result.Count == 0)
+            {
+                return;
+            }
+
+            _processManipulationResult.Action = action;
+            _processManipulationResult.Results = result;
+            _processManipulationResult.ShowDialog();
+        }
+
+        private void StartProcessBtn_Click(object sender, EventArgs e)
+        {
+            _startNewProcessDialog.Cores = 0;
+            if (_startNewProcessDialog.ShowDialog() == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            try
+            {
+                ShowRemoteCallResult(_connectionManager.StartNewProcesses(_startNewProcessDialog.Request), "Start");
+            }
+            catch (NoConnectionException exception)
+            {
+                Notifier.ErrorMessageBox(exception.Message);
+            }
+        }
+
+        private void DeleteProcessBtn_Click(object sender, EventArgs e)
+        {
+            var selectedRowCount = ProcessesGridView.Rows.GetRowCount(DataGridViewElementStates.Selected);
+            if (selectedRowCount <= 0) return;
+
+            var processesIds = (from DataGridViewRow selectedRow in ProcessesGridView.SelectedRows
+                select (int) selectedRow.Cells[1].Value).ToList();
+
+            try
+            {
+                ShowRemoteCallResult(_connectionManager.DeleteProcesses(processesIds), "Deletion");
+            }
+            catch (NoConnectionException exception)
+            {
+                Notifier.ErrorMessageBox(exception.Message);
+            }
+        }
+
+
+        private void ModifyProcessBtn_Click(object sender, EventArgs e)
+        {
+        }
 
         private static class GridViewManager
         {

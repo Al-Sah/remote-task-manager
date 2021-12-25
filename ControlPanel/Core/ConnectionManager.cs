@@ -114,5 +114,30 @@ namespace ControlPanel.Core
         }
 
         public void ShutDownConnection() => EndMainCall();
+
+
+        public List<ProcessStatus> DeleteProcesses(IEnumerable<int> processesIds)
+        {
+            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            {
+                throw new NoConnectionException();
+            }
+
+            var request = new KillRequest();
+            request.ProcessId.AddRange(processesIds);
+            return _client.Kill(request).Results.ToList();
+        }
+
+        public List<ProcessStatus> StartNewProcesses(IEnumerable<StartupInformation> processes)
+        {
+            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            {
+                throw new NoConnectionException();
+            }
+
+            var request = new StartRequest();
+            request.StartupRequests.AddRange(processes);
+            return _client.Start(request).Results.ToList();
+        }
     }
 }

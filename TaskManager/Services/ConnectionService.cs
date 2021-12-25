@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -32,6 +33,66 @@ namespace TaskManager.Services
                 await responseStream.WriteAsync(replyMsg);
                 Thread.Sleep(_time);
             }
+        }
+
+        public override Task<KillResponse> Kill(KillRequest request, ServerCallContext context)
+        {
+            var response = new KillResponse();
+            foreach (var pid in request.ProcessId)
+            {
+                try
+                {
+                    Process.GetProcessById(pid).Kill();
+                    response.Results.Add(new ProcessStatus {Id = pid, Status = "Ok"});
+                }
+                catch (Exception e)
+                {
+                    response.Results.Add(new ProcessStatus {Id = pid, Status = e.Message});
+                }
+            }
+
+            return Task.FromResult(response);
+        }
+
+        public override Task<StartResponse> Start(StartRequest request, ServerCallContext context)
+        {
+            var response = new StartResponse();
+            foreach (var startupInformation in request.StartupRequests)
+            {
+                try
+                {
+                    var process = new Process();
+                    process.StartInfo.FileName = startupInformation.Name;
+                    process.StartInfo.Arguments = startupInformation.Arguments;
+                    if (!process.Start())
+                    {
+                        response.Results.Add(new ProcessStatus
+                        {
+                            Id = startupInformation.RequestId,
+                            Status = "Failed to start"
+                        });
+                        continue;
+                    }
+
+                    process.PriorityClass =
+                        Enum.TryParse(startupInformation.Priority, true, out ProcessPriorityClass res)
+                            ? res
+                            : ProcessPriorityClass.Normal;
+                    if (startupInformation.Affinity != 0)
+                    {
+                        process.ProcessorAffinity = new IntPtr(startupInformation.Affinity);
+                    }
+
+                    response.Results.Add(new ProcessStatus {Id = startupInformation.RequestId, Status = "Ok"});
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e);
+                    response.Results.Add(new ProcessStatus {Id = startupInformation.RequestId, Status = e.Message});
+                }
+            }
+
+            return Task.FromResult(response);
         }
 
         public override async Task Get(

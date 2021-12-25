@@ -197,6 +197,7 @@
             this.DeleteProcessBtn.TabIndex = 2;
             this.DeleteProcessBtn.Text = "Delete process";
             this.DeleteProcessBtn.UseVisualStyleBackColor = true;
+            this.DeleteProcessBtn.Click += new System.EventHandler(this.DeleteProcessBtn_Click);
             // 
             // AddProcessBtn
             // 
@@ -208,6 +209,7 @@
             this.AddProcessBtn.TabIndex = 1;
             this.AddProcessBtn.Text = "Add process";
             this.AddProcessBtn.UseVisualStyleBackColor = true;
+            this.AddProcessBtn.Click += new System.EventHandler(this.StartProcessBtn_Click);
             // 
             // ModifyProcessBtn
             // 
@@ -219,6 +221,7 @@
             this.ModifyProcessBtn.TabIndex = 3;
             this.ModifyProcessBtn.Text = "Modify process";
             this.ModifyProcessBtn.UseVisualStyleBackColor = true;
+            this.ModifyProcessBtn.Click += new System.EventHandler(this.ModifyProcessBtn_Click);
             // 
             // ProcessesGridView
             // 
@@ -293,7 +296,7 @@
             this.MinimumSize = new System.Drawing.Size(800, 650);
             this.Name = "MainWindow";
             this.Text = "Task Manager";
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainWindow_FormClosed);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainWindow_FormClosing);
             this.MainLayoutPanel.ResumeLayout(false);
             this.ComutersControlBasePanel.ResumeLayout(false);
             this.ComutersControlBasePanel.PerformLayout();

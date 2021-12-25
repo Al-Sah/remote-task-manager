@@ -28,6 +28,9 @@
         <Compile Update="View\ShowServerInfoDialog.cs">
             <SubType>Form</SubType>
         </Compile>
+        <Compile Update="View\ProcessManipulationResult.cs">
+            <SubType>Form</SubType>
+        </Compile>
     </ItemGroup>
 
 </Project>

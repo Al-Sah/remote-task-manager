@@ -18,7 +18,7 @@ message RequestMgs {
 }
 
 message ProcessInformation{
-  int64 id = 1;
+  int32 id = 1;
   string name = 2;
   int32 affinity = 3;
   string priority = 4;
@@ -35,14 +35,14 @@ message ReplyMsg {
 
 
 message ProcessStatus {
-  int64 id = 1;
+  int32 id = 1;
   string status = 2; // "Ok" or error
 }
 
 
 // send array of PIDs to delete
 message KillRequest {
-  repeated int64 processId = 1;
+  repeated int32 processId = 1;
 }
 message KillResponse {
   repeated ProcessStatus results = 1;
@@ -51,7 +51,7 @@ message KillResponse {
 
 
 message Modification{
-  int64 id = 1;
+  int32 id = 1;
   string name = 2;
   int32 affinity = 3;
   string priority = 4;
