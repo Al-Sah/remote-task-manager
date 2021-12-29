@@ -159,5 +159,24 @@ namespace TaskManager.Services
 
             return Task.FromResult(response);
         }
+
+
+        public override Task<ForbidResponse> AddForbidden(ForbidRequest request, ServerCallContext context)
+        {
+            var response = new ForbidResponse
+            {
+                Message = ForbiddenProcessesManager.GetInstance().AddItem(request.Message)
+            };
+            return Task.FromResult(response);
+        }
+
+        public override Task<ForbidResponse> RemoveForbidden(ForbidRequest request, ServerCallContext context)
+        {
+            var response = new ForbidResponse
+            {
+                Message = ForbiddenProcessesManager.GetInstance().RemoveItem(request.Message)
+            };
+            return Task.FromResult(response);
+        }
     }
 }

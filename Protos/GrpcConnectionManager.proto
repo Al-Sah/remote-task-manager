@@ -9,6 +9,9 @@ service GrpcConnectionManager {
   rpc Kill (KillRequest) returns (KillResponse);
   rpc Modify (ModifyRequest) returns (ModifyResponse);
   rpc Start (StartRequest) returns (StartResponse);
+
+  rpc AddForbidden (ForbidRequest) returns (ForbidResponse);
+  rpc RemoveForbidden (ForbidRequest) returns (ForbidResponse);
 }
 
 
@@ -31,7 +34,12 @@ message ReplyMsg {
 }
 
 
-
+message ForbidRequest {
+  string message = 1;
+}
+message ForbidResponse {
+  string message = 1;
+}
 
 
 message ProcessStatus {

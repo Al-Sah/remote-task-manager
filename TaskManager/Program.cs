@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using TaskManager.Core;
 
 namespace TaskManager
 {
@@ -9,6 +10,7 @@ namespace TaskManager
 
         public static void Main(string[] args)
         {
+            ForbiddenProcessesManager.GetInstance(); // Creation
             // Init grpc
             _host = Host
                 .CreateDefaultBuilder(args)
@@ -18,6 +20,7 @@ namespace TaskManager
             var serverAdvertizer = new ServerAdvertizer();
             serverAdvertizer.Start();
             _host.Run(); // block
+            ForbiddenProcessesManager.GetInstance().Stop();
             serverAdvertizer.Stop();
         }
     }
