@@ -130,5 +130,34 @@ namespace TaskManager.Services
             });
             await readTask;
         }
+
+        public override Task<ModifyResponse> Modify(ModifyRequest request, ServerCallContext context)
+        {
+            var response = new ModifyResponse();
+            foreach (var modificationProcess in request.Modifications)
+            {
+                try
+                {
+                    var temp = Process.GetProcessById(modificationProcess.Id);
+                    temp.ProcessorAffinity = new IntPtr(modificationProcess.Affinity);
+                    temp.PriorityClass = Enum
+                        .TryParse(modificationProcess.Priority, true, out ProcessPriorityClass res)
+                        ? res
+                        : temp.PriorityClass;
+
+                    response.Results.Add(new ProcessStatus {Id = modificationProcess.Id, Status = "Ok"});
+                }
+                catch (Exception e)
+                {
+                    response.Results.Add(new ProcessStatus
+                    {
+                        Id = modificationProcess.Id,
+                        Status = e.Message
+                    });
+                }
+            }
+
+            return Task.FromResult(response);
+        }
     }
 }

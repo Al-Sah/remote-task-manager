@@ -139,5 +139,17 @@ namespace ControlPanel.Core
             request.StartupRequests.AddRange(processes);
             return _client.Start(request).Results.ToList();
         }
+
+        public List<ProcessStatus> ModifyProcesses(IEnumerable<Modification> processes)
+        {
+            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            {
+                throw new NoConnectionException();
+            }
+
+            var request = new ModifyRequest();
+            request.Modifications.AddRange(processes);
+            return _client.Modify(request).Results.ToList();
+        }
     }
 }

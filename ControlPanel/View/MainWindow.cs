@@ -19,6 +19,7 @@ namespace ControlPanel.View
 
         private readonly ProcessManipulationResult _processManipulationResult;
         private readonly StartNewProcessDialog _startNewProcessDialog;
+        private readonly ProcessModificationDialog _processModificationDialog;
 
         private ServerInfo? _serverInfo;
 
@@ -31,6 +32,8 @@ namespace ControlPanel.View
 
             _processManipulationResult = new ProcessManipulationResult();
             _startNewProcessDialog = new StartNewProcessDialog {Owner = this};
+
+            _processModificationDialog = new ProcessModificationDialog();
 
             _searcher = new TaskManagersSearcher();
             _searcher.NewTaskManagerFound += OnNewTaskManagerFound;
@@ -176,9 +179,38 @@ namespace ControlPanel.View
             }
         }
 
-
         private void ModifyProcessBtn_Click(object sender, EventArgs e)
         {
+            if (ProcessesGridView.SelectedRows.Count <= 0) return;
+
+            _processModificationDialog.ProcessModification.Clear();
+            foreach (DataGridViewRow selectedRow in ProcessesGridView.SelectedRows)
+            {
+                _processModificationDialog.ProcessModification.Add(
+                    new Modification
+                    {
+                        Id = (int) selectedRow.Cells["PID"].Value,
+                        Affinity = (int) selectedRow.Cells["Affinity"].Value,
+                        Priority = selectedRow.Cells["Priority"].Value.ToString(),
+                        Name = selectedRow.Cells["Process"].Value.ToString()
+                    }
+                );
+            }
+
+            if (_processModificationDialog.ShowDialog() == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            try
+            {
+                ShowRemoteCallResult(_connectionManager.ModifyProcesses(_processModificationDialog.ProcessModification),
+                    "Modification");
+            }
+            catch (NoConnectionException exception)
+            {
+                Notifier.ErrorMessageBox(exception.Message);
+            }
         }
 
         private static class GridViewManager
