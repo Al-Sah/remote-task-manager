@@ -10,7 +10,7 @@ namespace TaskManager.Core
         private static ForbiddenProcessesManager _instance;
         private List<string> ForbiddenList { get; }
         private readonly Thread _worker;
-        private object _locker = new object();
+        private readonly object _locker = new object();
         private bool _run;
 
         private ForbiddenProcessesManager()
@@ -20,10 +20,15 @@ namespace TaskManager.Core
             {
                 while (_run)
                 {
-                    foreach (var process in ForbiddenList.SelectMany(Process.GetProcessesByName))
+                    lock (_locker)
                     {
-                        process.Kill();
+                        foreach (var process in ForbiddenList.SelectMany(Process.GetProcessesByName))
+                        {
+                            process.Kill();
+                        }
                     }
+
+                    Thread.Sleep(10);
                 }
             });
             _worker.Start();
@@ -43,16 +48,26 @@ namespace TaskManager.Core
 
         public string AddItem(string name)
         {
-            if (ForbiddenList.Exists(s => s == name))
+            lock (_locker)
             {
-                return $"Item '{name}' exists";
+                if (ForbiddenList.Exists(s => s == name))
+                {
+                    return $"Item '{name}' exists";
+                }
+
+                ForbiddenList.Add(name);
             }
 
-            ForbiddenList.Add(name);
             return "Ok";
         }
 
-        public string RemoveItem(string name) => ForbiddenList.Remove(name) ? "Ok" : $"Failed to find '{name}'";
+        public string RemoveItem(string name)
+        {
+            lock (_locker)
+            {
+                return ForbiddenList.Remove(name) ? "Ok" : $"Failed to find '{name}'";
+            }
+        }
 
         public void Stop()
         {
