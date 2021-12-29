@@ -10,7 +10,7 @@ using TaskManager;
 
 namespace ControlPanel.Core
 {
-    public class ConnectionManager : IDisposable
+    public class ConnectionManager : IDisposable, IForbiddenProcessesManager
     {
         private GrpcConnectionManager.GrpcConnectionManagerClient? _client;
         private Thread? _mainCallHandler;
@@ -150,6 +150,33 @@ namespace ControlPanel.Core
             var request = new ModifyRequest();
             request.Modifications.AddRange(processes);
             return _client.Modify(request).Results.ToList();
+        }
+
+        public string ManageForbidden(string name, IForbiddenProcessesManager.ForbidAction action)
+        {
+            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            {
+                throw new NoConnectionException();
+            }
+
+            var request = new ForbidRequest
+            {
+                Message = name
+            };
+            return action == IForbiddenProcessesManager.ForbidAction.Add
+                ? _client.AddForbidden(request).Message
+                : _client.RemoveForbidden(request).Message;
+        }
+
+
+        public List<string> GetForbidden()
+        {
+            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            {
+                throw new NoConnectionException();
+            }
+
+            return new List<string>(); // TODO
         }
     }
 }

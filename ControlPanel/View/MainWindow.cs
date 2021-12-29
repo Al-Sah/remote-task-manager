@@ -20,6 +20,7 @@ namespace ControlPanel.View
         private readonly ProcessManipulationResult _processManipulationResult;
         private readonly StartNewProcessDialog _startNewProcessDialog;
         private readonly ProcessModificationDialog _processModificationDialog;
+        private readonly ForbiddenProcessesDialog _forbiddenProcessesDialog;
 
         private ServerInfo? _serverInfo;
 
@@ -34,6 +35,8 @@ namespace ControlPanel.View
             _startNewProcessDialog = new StartNewProcessDialog {Owner = this};
 
             _processModificationDialog = new ProcessModificationDialog();
+
+            _forbiddenProcessesDialog = new ForbiddenProcessesDialog(_connectionManager) {Owner = this};
 
             _searcher = new TaskManagersSearcher();
             _searcher.NewTaskManagerFound += OnNewTaskManagerFound;
@@ -212,6 +215,8 @@ namespace ControlPanel.View
                 Notifier.ErrorMessageBox(exception.Message);
             }
         }
+
+        private void ManageForbiddenBtn_Click(object sender, EventArgs e) => _forbiddenProcessesDialog.ShowDialog();
 
         private static class GridViewManager
         {

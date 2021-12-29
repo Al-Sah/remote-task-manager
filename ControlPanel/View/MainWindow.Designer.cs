@@ -48,6 +48,7 @@
             this.Affinity = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.RAM = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Path = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ManageForbiddenBtn = new System.Windows.Forms.Button();
             this.MainLayoutPanel.SuspendLayout();
             this.ComutersControlBasePanel.SuspendLayout();
             this.ComputersControlPanel.SuspendLayout();
@@ -105,9 +106,11 @@
             // 
             // ComputersControlPanel
             // 
-            this.ComputersControlPanel.ColumnCount = 2;
+            this.ComputersControlPanel.ColumnCount = 3;
             this.ComputersControlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.ComputersControlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.ComputersControlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.ComputersControlPanel.Controls.Add(this.ManageForbiddenBtn, 0, 0);
             this.ComputersControlPanel.Controls.Add(this.ConnectBtn, 0, 0);
             this.ComputersControlPanel.Controls.Add(this.ShowInfoComputerBtn, 0, 0);
             this.ComputersControlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -121,10 +124,10 @@
             // ConnectBtn
             // 
             this.ConnectBtn.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ConnectBtn.Location = new System.Drawing.Point(281, 5);
+            this.ConnectBtn.Location = new System.Drawing.Point(189, 5);
             this.ConnectBtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ConnectBtn.Name = "ConnectBtn";
-            this.ConnectBtn.Size = new System.Drawing.Size(270, 64);
+            this.ConnectBtn.Size = new System.Drawing.Size(177, 64);
             this.ConnectBtn.TabIndex = 7;
             this.ConnectBtn.Text = "Connect";
             this.ConnectBtn.UseVisualStyleBackColor = true;
@@ -136,7 +139,7 @@
             this.ShowInfoComputerBtn.Location = new System.Drawing.Point(4, 5);
             this.ShowInfoComputerBtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.ShowInfoComputerBtn.Name = "ShowInfoComputerBtn";
-            this.ShowInfoComputerBtn.Size = new System.Drawing.Size(269, 64);
+            this.ShowInfoComputerBtn.Size = new System.Drawing.Size(177, 64);
             this.ShowInfoComputerBtn.TabIndex = 6;
             this.ShowInfoComputerBtn.Text = "Show info";
             this.ShowInfoComputerBtn.UseVisualStyleBackColor = true;
@@ -285,6 +288,18 @@
             this.Path.Name = "Path";
             this.Path.ReadOnly = true;
             // 
+            // ManageForbiddenBtn
+            // 
+            this.ManageForbiddenBtn.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ManageForbiddenBtn.Location = new System.Drawing.Point(374, 5);
+            this.ManageForbiddenBtn.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.ManageForbiddenBtn.Name = "ManageForbiddenBtn";
+            this.ManageForbiddenBtn.Size = new System.Drawing.Size(177, 64);
+            this.ManageForbiddenBtn.TabIndex = 8;
+            this.ManageForbiddenBtn.Text = "Manage forbidden";
+            this.ManageForbiddenBtn.UseVisualStyleBackColor = true;
+            this.ManageForbiddenBtn.Click += new System.EventHandler(this.ManageForbiddenBtn_Click);
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
@@ -329,6 +344,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Path;
         private System.Windows.Forms.DataGridView ProcessesGridView;
         private System.Windows.Forms.Button ConnectBtn;
+        private System.Windows.Forms.Button ManageForbiddenBtn;
     }
 }
 
