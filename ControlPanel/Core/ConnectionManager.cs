@@ -176,7 +176,7 @@ namespace ControlPanel.Core
                 throw new NoConnectionException();
             }
 
-            return new List<string>(); // TODO
+            return _client.GetForbiddenNames(new ForbidRequest()).Names.ToList();
         }
     }
 }

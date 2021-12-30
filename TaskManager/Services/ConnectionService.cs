@@ -178,5 +178,12 @@ namespace TaskManager.Services
             };
             return Task.FromResult(response);
         }
+
+        public override Task<ForbiddenList> GetForbiddenNames(ForbidRequest request, ServerCallContext context)
+        {
+            var response = new ForbiddenList();
+            response.Names.AddRange(ForbiddenProcessesManager.GetInstance().GetNames());
+            return Task.FromResult(response);
+        }
     }
 }

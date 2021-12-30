@@ -12,6 +12,7 @@ service GrpcConnectionManager {
 
   rpc AddForbidden (ForbidRequest) returns (ForbidResponse);
   rpc RemoveForbidden (ForbidRequest) returns (ForbidResponse);
+  rpc GetForbiddenNames (ForbidRequest) returns (ForbiddenList);
 }
 
 
@@ -39,6 +40,10 @@ message ForbidRequest {
 }
 message ForbidResponse {
   string message = 1;
+}
+
+message ForbiddenList{
+  repeated string names = 1;
 }
 
 

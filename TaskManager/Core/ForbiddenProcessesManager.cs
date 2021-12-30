@@ -69,6 +69,14 @@ namespace TaskManager.Core
             }
         }
 
+        public List<string> GetNames()
+        {
+            lock (_locker)
+            {
+                return new List<string>(ForbiddenList);
+            }
+        }
+
         public void Stop()
         {
             _run = false;
