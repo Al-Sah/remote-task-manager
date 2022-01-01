@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Makaretu.Dns;
 
 namespace TaskManager
@@ -42,7 +43,7 @@ namespace TaskManager
             var sd = new ServiceDiscovery(mdns);
 
             // TODO get instance name from startup settings (and port ... )
-            sd.Advertise(new ServiceProfile("alx-tm", "alx-grpc-tm", 5001));
+            sd.Advertise(new ServiceProfile("tm" + new Random().Next(1, 999), "alx-tm", 5001));
             mdns.Start();
             _event.WaitOne();
         }

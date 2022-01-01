@@ -10,6 +10,7 @@ namespace ControlPanel.Core
 {
     public class TaskManagersSearcher
     {
+        private const string DomainNameStr = "alx-tm";
         private readonly EventWaitHandle _event;
         private readonly Thread _executor;
         private readonly Thread _updater;
@@ -37,7 +38,7 @@ namespace ControlPanel.Core
 
             _updater = new Thread(() =>
             {
-                var domainName = new DomainName("alx-grpc-tm");
+                var domainName = new DomainName(DomainNameStr);
                 const int timeout = SecondsTimeout * 1000;
                 while (_started)
                 {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -29,7 +30,16 @@ namespace ControlPanel.Core
         public bool SetupNewConnection(ServerInfo serverInfo)
         {
             EndMainCall();
-            _grpcChannel = GrpcChannel.ForAddress($"https://localhost:{serverInfo.Port}");
+
+            var httpHandler = new HttpClientHandler();
+//            httpHandler.conn
+            // Return `true` to allow certificates that are untrusted/invalid
+            httpHandler.ServerCertificateCustomValidationCallback =
+                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+
+            _grpcChannel = GrpcChannel.ForAddress($"https://{serverInfo.Address}:{serverInfo.Port}",
+                new GrpcChannelOptions {HttpHandler = httpHandler});
+            // 
             _client = new GrpcConnectionManager.GrpcConnectionManagerClient(_grpcChannel);
             return _client != null;
         }
@@ -115,10 +125,23 @@ namespace ControlPanel.Core
 
         public void ShutDownConnection() => EndMainCall();
 
+        private bool ChanReady()
+        {
+            return true;
+            //TODO not working
+            //return _grpcChannel?.State == ConnectivityState.Ready;
+        }
+
+        private bool BadChannel()
+        {
+            return !ChanReady();
+            // TODO not working
+            //return _grpcChannel?.State == ConnectivityState.Ready;
+        }
 
         public List<ProcessStatus> DeleteProcesses(IEnumerable<int> processesIds)
         {
-            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            if (_client == null || BadChannel())
             {
                 throw new NoConnectionException();
             }
@@ -130,7 +153,7 @@ namespace ControlPanel.Core
 
         public List<ProcessStatus> StartNewProcesses(IEnumerable<StartupInformation> processes)
         {
-            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            if (_client == null || BadChannel())
             {
                 throw new NoConnectionException();
             }
@@ -142,7 +165,7 @@ namespace ControlPanel.Core
 
         public List<ProcessStatus> ModifyProcesses(IEnumerable<Modification> processes)
         {
-            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            if (_client == null || BadChannel())
             {
                 throw new NoConnectionException();
             }
@@ -154,7 +177,7 @@ namespace ControlPanel.Core
 
         public string ManageForbidden(string name, IForbiddenProcessesManager.ForbidAction action)
         {
-            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            if (_client == null || BadChannel())
             {
                 throw new NoConnectionException();
             }
@@ -171,7 +194,7 @@ namespace ControlPanel.Core
 
         public List<string> GetForbidden()
         {
-            if (_client == null || _grpcChannel?.State != ConnectivityState.Ready)
+            if (_client == null || BadChannel())
             {
                 throw new NoConnectionException();
             }
