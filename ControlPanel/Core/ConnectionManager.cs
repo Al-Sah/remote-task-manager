@@ -29,17 +29,17 @@ namespace ControlPanel.Core
 
         public bool SetupNewConnection(ServerInfo serverInfo)
         {
-            EndMainCall();
+            var task = Task.Run(async () => await EndMainCall());
+            task.Wait();
 
             var httpHandler = new HttpClientHandler();
-//            httpHandler.conn
             // Return `true` to allow certificates that are untrusted/invalid
             httpHandler.ServerCertificateCustomValidationCallback =
                 HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
             _grpcChannel = GrpcChannel.ForAddress($"https://{serverInfo.Address}:{serverInfo.Port}",
                 new GrpcChannelOptions {HttpHandler = httpHandler});
-            // 
+
             _client = new GrpcConnectionManager.GrpcConnectionManagerClient(_grpcChannel);
             return _client != null;
         }
@@ -73,7 +73,7 @@ namespace ControlPanel.Core
         }
 
 
-        private async void EndMainCall()
+        private async Task EndMainCall()
         {
             if (_mainCall != null)
             {
@@ -109,21 +109,27 @@ namespace ControlPanel.Core
 
         public void Dispose()
         {
-            EndMainCall();
-            if (_mainCallHandler is {IsAlive: true})
+            ShutDownConnection();
+            if (_mainCallHandler is not {IsAlive: true})
             {
-                try
-                {
-                    _mainCallHandler.Join();
-                }
-                catch
-                {
-                    // ignored
-                }
+                return;
+            }
+
+            try
+            {
+                _mainCallHandler.Join();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(exception.Message);
             }
         }
 
-        public void ShutDownConnection() => EndMainCall();
+        public void ShutDownConnection()
+        {
+            var task = Task.Run(async () => await EndMainCall());
+            task.Wait();
+        }
 
         private bool ChanReady()
         {
