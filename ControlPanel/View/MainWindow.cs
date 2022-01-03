@@ -158,7 +158,7 @@ namespace ControlPanel.View
             {
                 ShowRemoteCallResult(_connectionManager.StartNewProcesses(_startNewProcessDialog.Request), "Start");
             }
-            catch (NoConnectionException exception)
+            catch (Exception exception)
             {
                 Notifier.ErrorMessageBox(exception.Message);
             }
@@ -176,7 +176,7 @@ namespace ControlPanel.View
             {
                 ShowRemoteCallResult(_connectionManager.DeleteProcesses(processesIds), "Deletion");
             }
-            catch (NoConnectionException exception)
+            catch (Exception exception)
             {
                 Notifier.ErrorMessageBox(exception.Message);
             }
@@ -210,7 +210,7 @@ namespace ControlPanel.View
                 ShowRemoteCallResult(_connectionManager.ModifyProcesses(_processModificationDialog.ProcessModification),
                     "Modification");
             }
-            catch (NoConnectionException exception)
+            catch (Exception exception)
             {
                 Notifier.ErrorMessageBox(exception.Message);
             }
